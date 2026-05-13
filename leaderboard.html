@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Leaderboard — eDrillr</title>
+<style>
+  :root { --indigo:#4F46E5; --indigo-light:#EEF2FF; --amber:#F59E0B; --amber-light:#FEF3C7; --bg:#F4F4F8; --surface:#FFFFFF; --surface2:#F0F0F6; --border:#E2E2EE; --text:#0F0F1A; --text2:#5A5A7A; --text3:#9898B8; --shadow-lg:0 8px 24px rgba(79,70,229,0.13); --radius:14px; --radius-sm:9px; --purple:#9333EA; --purple-light:#F3E8FF; }
+  [data-theme="dark"] { --bg:#0F0F1A; --surface:#1A1A2E; --surface2:#22223A; --border:#2A2A48; --text:#F0F0FA; --text2:#9898C8; --text3:#5A5A88; --shadow-lg:0 8px 24px rgba(0,0,0,0.4); --indigo-light:#1E1B4B; --amber-light:#1C1700; --purple-light:#1e0a33; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; }
+  body { font-family:-apple-system,'Roboto','Segoe UI',sans-serif; background:var(--bg); color:var(--text); max-width:430px; margin:0 auto; display:flex; flex-direction:column; }
+
+  .topbar { display:flex; align-items:center; gap:10px; padding:10px 16px 8px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .back-btn { width:33px; height:33px; border-radius:50%; border:none; background:var(--surface2); color:var(--text2); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .back-btn:active { transform:scale(0.91); }
+  .back-btn:hover { background:var(--purple-light); color:var(--purple); }
+  .topbar-title { font-weight:700; font-size:16px; color:var(--text); flex:1; }
+  .icon-btn { width:33px; height:33px; border-radius:50%; border:none; background:var(--surface2); color:var(--text2); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .icon-btn:active { transform:scale(0.91); }
+
+  .page-content { flex:1; overflow-y:auto; overflow-x:hidden; scrollbar-width:none;  }
+  .page-content::-webkit-scrollbar { display:none; }
+
+  /* TOP 3 PODIUM */
+  .podium { display:flex; align-items:flex-end; justify-content:center; gap:10px; padding:16px 20px 8px; }
+  .podium-item { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; }
+  .podium-avatar { border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; position:relative; }
+  .podium-crown { position:absolute; top:-14px; font-size:16px; }
+  .podium-name { font-size:11px; font-weight:600; color:var(--text); text-align:center; }
+  .podium-score { font-size:10px; color:var(--text3); }
+  .podium-block { width:100%; border-radius:var(--radius-sm) var(--radius-sm) 0 0; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; color:#fff; }
+  .p1 .podium-avatar { width:52px; height:52px; background:linear-gradient(135deg,#F59E0B,#D97706); }
+  .p2 .podium-avatar { width:44px; height:44px; background:linear-gradient(135deg,#9333EA,#7E22CE); }
+  .p3 .podium-avatar { width:40px; height:40px; background:linear-gradient(135deg,#F43F5E,#BE123C); }
+  .p1 .podium-block { height:70px; background:linear-gradient(135deg,#F59E0B,#D97706); }
+  .p2 .podium-block { height:50px; background:linear-gradient(135deg,#9333EA,#7E22CE); }
+  .p3 .podium-block { height:40px; background:linear-gradient(135deg,#F43F5E,#BE123C); }
+
+  /* FILTER STRIP */
+  .filter-strip { display:flex; gap:8px; padding:8px 16px 6px; overflow-x:auto; scrollbar-width:none; }
+  .filter-strip::-webkit-scrollbar { display:none; }
+  .filter-chip { flex-shrink:0; padding:5px 14px; border-radius:20px; border:1.5px solid var(--border); background:var(--surface); font-size:12px; color:var(--text2); cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .filter-chip.active { background:var(--purple); border-color:var(--purple); color:#fff; }
+
+  .section-label { padding:8px 16px 6px; font-weight:700; font-size:13px; color:var(--text); }
+
+  /* RANK LIST */
+  .rank-list { display:flex; flex-direction:column; gap:8px; padding:0 16px; }
+  .rank-item { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; display:flex; align-items:center; gap:12px; animation:fadeUp 0.3s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .rank-num { font-weight:800; font-size:15px; width:28px; text-align:center; color:var(--text3); flex-shrink:0; }
+  .rank-avatar { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#fff; flex-shrink:0; }
+  .rank-info { flex:1; }
+  .rank-name { font-weight:600; font-size:13px; color:var(--text); margin-bottom:2px; }
+  .rank-detail { font-size:10px; color:var(--text3); }
+  .rank-score { font-weight:800; font-size:14px; color:var(--purple); flex-shrink:0; }
+  .rank-item.me { border-color:var(--purple); background:var(--purple-light); }
+
+  
+  
+  
+  
+  
+  
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="location.replace('index.html')">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </button>
+  <span class="topbar-title">Leaderboard</span>
+  <button class="icon-btn" id="themeToggle">
+    <svg id="themeIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  </button>
+</div>
+
+<div class="page-content">
+  <!-- PODIUM -->
+  <div class="podium" id="podium"></div>
+
+  <!-- FILTER -->
+  <div class="filter-strip">
+    <div class="filter-chip active" onclick="filterBoard(this,'all')">All Time</div>
+    <div class="filter-chip" onclick="filterBoard(this,'week')">This Week</div>
+    <div class="filter-chip" onclick="filterBoard(this,'month')">This Month</div>
+  </div>
+
+  <div class="section-label">Rankings</div>
+  <div class="rank-list" id="rankList"></div>
+</div>
+
+
+
+<script>
+  const html = document.documentElement;
+  const themeIcon = document.getElementById('themeIcon');
+  const sunSVG = `<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="5"/>`;
+  const moonSVG = `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
+  function setTheme(dark) { html.setAttribute('data-theme', dark?'dark':'light'); themeIcon.innerHTML = dark?sunSVG:moonSVG; localStorage.setItem('eDrillr-theme', dark?'dark':'light'); }
+  const saved = localStorage.getItem('eDrillr-theme');
+  setTheme(saved ? saved==='dark' : false);
+  document.getElementById('themeToggle').addEventListener('click', () => setTheme(html.getAttribute('data-theme')!=='dark'));
+
+  const API = 'https://script.google.com/macros/s/AKfycbwawJeAi1bHPXQKwBHbXWQyP0E457aNeVghJiBqE3PnXX4ISqiPKoBD_YaBllMLyo3E/exec';
+  const avatarColors = ['#4F46E5','#9333EA','#F43F5E','#F59E0B','#10B981','#06B6D4','#F97316'];
+  let allData = [];
+  const currentUser = JSON.parse(localStorage.getItem('eDrillr-user') || 'null');
+
+  async function loadLeaderboard() {
+    document.getElementById('podium').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Loading...</div>';
+    try {
+      const res = await fetch(`${API}?action=get_leaderboard`);
+      const data = await res.json();
+      if (data.success && data.leaderboard.length) {
+        allData = data.leaderboard.map(p => ({
+          name: p.name,
+          score: parseInt(p.score) || 0,
+          quizzes: parseInt(p.quizzes) || 0,
+          initials: p.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),
+          isMe: currentUser && p.userId === currentUser.id
+        }));
+        render(allData);
+      } else {
+        document.getElementById('podium').innerHTML = '';
+        document.getElementById('rankList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">No leaderboard data yet</div>';
+      }
+    } catch(e) {
+      document.getElementById('podium').innerHTML = '';
+      document.getElementById('rankList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Failed to load. Check connection.</div>';
+    }
+  }
+
+  function render(data) {
+    const top3 = data.slice(0,3);
+    const order = [top3[1], top3[0], top3[2]];
+    const classes = ['p2','p1','p3'];
+    const positions = [2,1,3];
+    document.getElementById('podium').innerHTML = order.map((p, i) => p ? `
+      <div class="podium-item ${classes[i]}">
+        <div class="podium-avatar" style="background:${avatarColors[data.indexOf(p) % avatarColors.length]}">
+          ${i===1?`<span class="podium-crown">👑</span>`:''}
+          ${p.initials}
+        </div>
+        <div class="podium-name">${p.name}</div>
+        <div class="podium-score">${p.score.toLocaleString()}</div>
+        <div class="podium-block">${positions[i]}</div>
+      </div>` : '').join('');
+
+    const rest = data.slice(3);
+    document.getElementById('rankList').innerHTML = rest.length ? rest.map((p, i) => `
+      <div class="rank-item ${p.isMe?'me':''}" style="animation-delay:${i*0.04}s">
+        <div class="rank-num">${i+4}</div>
+        <div class="rank-avatar" style="background:${avatarColors[(i+3) % avatarColors.length]}">${p.initials}</div>
+        <div class="rank-info">
+          <div class="rank-name">${p.name}${p.isMe?' (You)':''}</div>
+          <div class="rank-detail">${p.quizzes} quizzes completed</div>
+        </div>
+        <div class="rank-score">${p.score.toLocaleString()}</div>
+      </div>`).join('') : '';
+  }
+
+  function filterBoard(el, period) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    // Re-fetch with period filter — for now reload same data
+    loadLeaderboard();
+  }
+
+  loadLeaderboard();
+  history.replaceState(null, null, location.href);
+  window.addEventListener('popstate', function() { location.replace('index.html'); });
+</script>
+</body>
+</html>

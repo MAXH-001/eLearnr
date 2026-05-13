@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Challenges — eDrillr</title>
+<style>
+  :root { --indigo:#4F46E5; --indigo-light:#EEF2FF; --amber:#F59E0B; --amber-light:#FEF3C7; --orange:#F97316; --orange-light:#FFEDD5; --bg:#F4F4F8; --surface:#FFFFFF; --surface2:#F0F0F6; --border:#E2E2EE; --text:#0F0F1A; --text2:#5A5A7A; --text3:#9898B8; --shadow-lg:0 8px 24px rgba(249,115,22,0.12); --radius:14px; --radius-sm:9px; }
+  [data-theme="dark"] { --bg:#0F0F1A; --surface:#1A1A2E; --surface2:#22223A; --border:#2A2A48; --text:#F0F0FA; --text2:#9898C8; --text3:#5A5A88; --shadow-lg:0 8px 24px rgba(0,0,0,0.4); --indigo-light:#1E1B4B; --amber-light:#1C1700; --orange-light:#2d1200; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; }
+  body { font-family:-apple-system,'Roboto','Segoe UI',sans-serif; background:var(--bg); color:var(--text); max-width:430px; margin:0 auto; display:flex; flex-direction:column; }
+
+  .topbar { display:flex; align-items:center; gap:10px; padding:10px 16px 8px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .back-btn { width:33px; height:33px; border-radius:50%; border:none; background:var(--surface2); color:var(--text2); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .back-btn:active { transform:scale(0.91); }
+  .back-btn:hover { background:var(--orange-light); color:var(--orange); }
+  .topbar-title { font-weight:700; font-size:16px; color:var(--text); flex:1; }
+  .icon-btn { width:33px; height:33px; border-radius:50%; border:none; background:var(--surface2); color:var(--text2); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+
+  .page-content { flex:1; overflow-y:auto; overflow-x:hidden; scrollbar-width:none;  }
+  .page-content::-webkit-scrollbar { display:none; }
+
+  /* ACTIVE CHALLENGE BANNER */
+  .active-banner { margin:12px 16px; background:linear-gradient(135deg,#F97316,#EA580C); border-radius:var(--radius); padding:16px; position:relative; overflow:hidden; cursor:pointer; }
+  .active-banner.hidden { display:none; }
+  .active-banner::after { content:'⚡'; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:48px; opacity:0.15; }
+  .banner-label { font-size:10px; color:rgba(255,255,255,0.8); font-weight:600; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:4px; }
+  .banner-title { font-size:17px; font-weight:800; color:#fff; margin-bottom:6px; }
+  .banner-meta { font-size:11px; color:rgba(255,255,255,0.85); margin-bottom:10px; }
+  .banner-timer { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.2); border-radius:20px; padding:4px 12px; font-size:11px; color:#fff; font-weight:600; }
+  .banner-btn { display:inline-block; margin-top:10px; background:#fff; color:var(--orange); padding:7px 18px; border-radius:20px; font-size:12px; font-weight:700; }
+
+  .section-label { padding:8px 16px 6px; font-weight:700; font-size:13px; color:var(--text); }
+
+  .challenge-list { display:flex; flex-direction:column; gap:10px; padding:0 16px; }
+  .challenge-card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); padding:14px 16px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:border-color 0.18s, transform 0.15s; animation:fadeUp 0.35s ease both; }
+  .challenge-card:active { transform:scale(0.98); }
+  .challenge-card:hover { border-color:var(--orange); box-shadow:var(--shadow-lg); }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  .ch-icon { width:44px; height:44px; border-radius:var(--radius-sm); background:var(--orange-light); color:var(--orange); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; }
+  .ch-info { flex:1; }
+  .ch-title { font-weight:700; font-size:13px; color:var(--text); margin-bottom:3px; }
+  .ch-meta { font-size:11px; color:var(--text3); }
+  .ch-badge { padding:3px 9px; border-radius:10px; font-size:10px; font-weight:600; flex-shrink:0; }
+  .badge-live { background:#D1FAE5; color:#065F46; }
+  .badge-soon { background:var(--amber-light); color:#92400E; }
+  .badge-ended { background:var(--surface2); color:var(--text3); }
+  [data-theme="dark"] .badge-live { background:#052e1c; color:#34D399; }
+  [data-theme="dark"] .badge-soon { background:#1C1700; color:#FCD34D; }
+
+  
+  
+  
+  
+  
+  
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="location.replace('index.html')">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </button>
+  <span class="topbar-title">Challenges</span>
+  <button class="icon-btn" id="themeToggle">
+    <svg id="themeIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  </button>
+</div>
+
+<div class="page-content">
+
+  <!-- ACTIVE WEEKLY CHALLENGE -->
+  <div class="active-banner hidden" id="liveBanner" onclick="startChallenge()">
+    <div class="banner-label" id="bannerLabel">⚡ Weekly Challenge — Live Now</div>
+    <div class="banner-title" id="bannerTitle">Loading...</div>
+    <div class="banner-meta" id="bannerMeta"></div>
+    <div class="banner-timer">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="countdown">Loading...</span>
+    </div>
+    <div class="banner-btn">Join Now →</div>
+  </div>
+
+  <div class="section-label" id="challengeLabel">Challenges</div>
+
+  <div class="challenge-list" id="challengeList">
+    <div style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">Loading challenges...</div>
+  </div>
+
+  <div class="section-label" style="margin-top:8px">Scheduled Quizzes</div>
+  <div class="challenge-list" id="scheduledList">
+    <div style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">Loading scheduled quizzes...</div>
+  </div>
+
+</div>
+
+
+
+<script>
+  const html = document.documentElement;
+  const themeIcon = document.getElementById('themeIcon');
+  const sunSVG = `<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="5"/>`;
+  const moonSVG = `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
+  function setTheme(dark) { html.setAttribute('data-theme', dark?'dark':'light'); themeIcon.innerHTML = dark?sunSVG:moonSVG; localStorage.setItem('eDrillr-theme', dark?'dark':'light'); }
+  const saved = localStorage.getItem('eDrillr-theme');
+  setTheme(saved ? saved==='dark' : false);
+  document.getElementById('themeToggle').addEventListener('click', () => setTheme(html.getAttribute('data-theme')!=='dark'));
+
+  const API = 'https://script.google.com/macros/s/AKfycbwawJeAi1bHPXQKwBHbXWQyP0E457aNeVghJiBqE3PnXX4ISqiPKoBD_YaBllMLyo3E/exec';
+  const currentUser = JSON.parse(localStorage.getItem('eDrillr-user') || 'null');
+  let liveChallenge = null;
+  let countdownInterval = null;
+
+  const subjectIcons = { MATHS:'∑', MATHEMATICS:'∑', PHYSICS:'⚛', CHEMISTRY:'⚗', BIOLOGY:'🧬', ENGLISH:'Aa', GENERAL:'🏆', DEFAULT:'📝' };
+  function getIcon(subject) { const u = (subject||'').toUpperCase(); for(const k in subjectIcons){if(u.includes(k)) return subjectIcons[k];} return subjectIcons.DEFAULT; }
+
+  async function loadChallenges() {
+    try {
+      const res = await fetch(`${API}?action=get_challenges`);
+      const data = await res.json();
+      renderChallenges(data.success ? data.challenges : []);
+    } catch(e) {
+      document.getElementById('challengeList').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">Failed to load. Check connection.</div>';
+    }
+  }
+
+  async function loadScheduled() {
+    try {
+      const res = await fetch(`${API}?action=get_scheduled`);
+      const data = await res.json();
+      renderScheduled(data.success ? data.quizzes : []);
+    } catch(e) {
+      document.getElementById('scheduledList').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">Failed to load.</div>';
+    }
+  }
+
+  function renderChallenges(challenges) {
+    const live = challenges.filter(c => c.status === 'live');
+    const others = challenges.filter(c => c.status !== 'live');
+
+    // Show live banner for first live challenge
+    if (live.length) {
+      liveChallenge = live[0];
+      document.getElementById('liveBanner').classList.remove('hidden');
+      document.getElementById('bannerTitle').textContent = liveChallenge.title;
+      document.getElementById('bannerMeta').textContent = `${liveChallenge.subject} · ${liveChallenge.questions} questions · ${liveChallenge.duration} min`;
+      startCountdown(new Date(liveChallenge.endDate));
+    }
+
+    document.getElementById('challengeLabel').textContent = `${challenges.length} Challenge${challenges.length!==1?'s':''}`;
+
+    if (!challenges.length) {
+      document.getElementById('challengeList').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">No challenges yet. Check back soon.</div>';
+      return;
+    }
+
+    document.getElementById('challengeList').innerHTML = challenges.map((c, i) => {
+      const badgeClass = c.status === 'live' ? 'badge-live' : c.status === 'upcoming' ? 'badge-soon' : 'badge-ended';
+      const badgeText = c.status === 'live' ? 'Live' : c.status === 'upcoming' ? 'Upcoming' : 'Ended';
+      const disabled = c.status === 'ended' ? 'style="opacity:0.5;pointer-events:none"' : '';
+      return `
+        <div class="challenge-card" ${disabled} style="animation-delay:${i*0.05}s" onclick="joinChallenge('${c.id}')">
+          <div class="ch-icon">${getIcon(c.subject)}</div>
+          <div class="ch-info">
+            <div class="ch-title">${c.title}</div>
+            <div class="ch-meta">${c.subject} · ${c.questions} questions · ${c.duration} min</div>
+          </div>
+          <span class="ch-badge ${badgeClass}">${badgeText}</span>
+        </div>`;
+    }).join('');
+  }
+
+  function renderScheduled(quizzes) {
+    if (!quizzes.length) {
+      document.getElementById('scheduledList').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">No scheduled quizzes yet.</div>';
+      return;
+    }
+
+    document.getElementById('scheduledList').innerHTML = quizzes.map((q, i) => {
+      const badgeClass = q.status === 'live' ? 'badge-live' : q.status === 'upcoming' ? 'badge-soon' : 'badge-ended';
+      const badgeText = q.status === 'live' ? 'Live' : q.status === 'upcoming' ? 'Upcoming' : 'Ended';
+      const startDate = new Date(q.startDate).toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      return `
+        <div class="challenge-card" style="animation-delay:${i*0.05}s" onclick="registerQuiz('${q.id}', '${q.sessionUrl}')">
+          <div class="ch-icon">📋</div>
+          <div class="ch-info">
+            <div class="ch-title">${q.title}</div>
+            <div class="ch-meta">${q.subject} · ${q.questions} Qs · ${startDate}</div>
+          </div>
+          <span class="ch-badge ${badgeClass}">${badgeText}</span>
+        </div>`;
+    }).join('');
+  }
+
+  function startCountdown(endDate) {
+    if (countdownInterval) clearInterval(countdownInterval);
+    function update() {
+      const diff = endDate - new Date();
+      if (diff <= 0) { document.getElementById('countdown').textContent = 'Ended'; clearInterval(countdownInterval); return; }
+      const h = Math.floor(diff/3600000);
+      const m = Math.floor((diff%3600000)/60000);
+      const s = Math.floor((diff%60000)/1000);
+      document.getElementById('countdown').textContent = `Ends in ${h}h ${m}m ${s}s`;
+    }
+    update();
+    countdownInterval = setInterval(update, 1000);
+  }
+
+  function startChallenge() {
+    if (!liveChallenge) return;
+    joinChallenge(liveChallenge.id);
+  }
+
+  function joinChallenge(id) {
+    if (!currentUser) {
+      alert('Please login to join a challenge');
+      location.replace('index.html');
+      return;
+    }
+    // Route to quiz with challenge params
+    location.replace(`quiz.html?challenge=${id}`);
+  }
+
+  function registerQuiz(id, sessionUrl) {
+    if (!currentUser) {
+      alert('Please login to register for a quiz');
+      location.replace('index.html');
+      return;
+    }
+    location.replace(sessionUrl || `quiz.html?session=${id}`);
+  }
+
+  loadChallenges();
+  loadScheduled();
+  history.replaceState(null, null, location.href);
+  window.addEventListener('popstate', function() { location.replace('index.html'); });
+</script>
+</body>
+</html>
