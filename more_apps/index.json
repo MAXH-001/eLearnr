@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "name": "ExamDriller",
+      "logo": "more_apps/ExamDriller/logo.png",
+      "url": "https://examdriller.vercel.app"
+    }
+  ]
+}
