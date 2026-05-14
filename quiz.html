@@ -218,7 +218,7 @@
       </div>
     </div>
 
-    <button class="start-btn" onclick="startQuiz()">Start Quiz →</button>
+    <button class="start-btn" id="startBtn" onclick="startQuiz()">Start Quiz →</button>
   </div>
 </div>
 
@@ -335,30 +335,40 @@
       const data = await res.json();
       quizMeta = data.meta || {};
       questions = data.questions || [];
+      // Enforce max 40 questions
+      if (questions.length > 40) questions = questions.slice(0, 40);
     } catch(e) {
-      // Demo questions
-      quizMeta = { subject: SUBJECT||'MATHEMATICS', topic:'Algebra', difficulty:'medium', total:10, duration:30 };
-      questions = [
-        { id:1, q:'What is the value of x if 2x + 3 = 11?', img:null, options:['2','3','4','5'], answer:2, explanation:'2x = 11 - 3 = 8, so x = 4' },
-        { id:2, q:'Simplify: 3(x + 4) - 2x', img:null, options:['x + 4','x + 12','5x + 4','x + 8'], answer:1, explanation:'3x + 12 - 2x = x + 12' },
-        { id:3, q:'What is the slope of y = 3x + 7?', img:null, options:['7','3','1','0'], answer:1, explanation:'In y = mx + b, m is the slope. Here m = 3.' },
-        { id:4, q:'Solve: x² = 25', img:null, options:['x = 5','x = ±5','x = -5','x = 25'], answer:1, explanation:'√25 = ±5, both positive and negative.' },
-        { id:5, q:'What is 4! (4 factorial)?', img:null, options:['8','16','24','32'], answer:2, explanation:'4! = 4 × 3 × 2 × 1 = 24' },
-      ];
+      // No questions found
+      quizMeta = { subject: SUBJECT || '', topic: '', total: 0, duration: 30 };
+      questions = [];
+    }
+
+    if (!questions.length) {
+      // Show empty state — no questions available
+      document.getElementById('heroSubject').textContent = SUBJECT || 'Unknown';
+      document.getElementById('heroTopic').textContent = 'No Questions Yet';
+      document.getElementById('heroMeta').textContent = 'This set has no questions yet';
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('startBtn').textContent = 'No Questions Available';
+      document.getElementById('startBtn').style.opacity = '0.5';
+      return;
     }
 
     document.getElementById('heroSubject').textContent = quizMeta.subject || SUBJECT;
     document.getElementById('heroTopic').textContent = quizMeta.topic || 'Quiz';
-    document.getElementById('heroMeta').textContent = `${questions.length} questions · ${quizMeta.difficulty || ''} difficulty`;
+    document.getElementById('heroMeta').textContent = `${Math.min(questions.length, 40)} questions · ${quizMeta.difficulty || ''} difficulty`;
     userTime = quizMeta.duration || 30;
     document.getElementById('timeVal').textContent = userTime;
   }
 
   function startQuiz() {
     const shuffle = document.getElementById('shuffleToggle').checked;
+    // Enforce 40 question max
+    let qs = questions.slice(0, 40);
     if (shuffle) {
-      questions = [...questions].sort(() => Math.random() - 0.5);
+      qs = [...qs].sort(() => Math.random() - 0.5);
     }
+    questions = qs;
     answers   = new Array(questions.length).fill(null);
     current   = 0;
     timerSec  = userTime * 60;
