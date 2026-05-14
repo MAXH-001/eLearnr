@@ -1,0 +1,16 @@
+{
+  "subjects": [
+    {
+      "name": "MATHS",
+      "sets": [
+        {
+          "id": "0001",
+          "topic": "Basic Arithmetic",
+          "total": 5,
+          "duration": 10,
+          "path": "QDB/MATHS/0001/0001.json"
+        }
+      ]
+    }
+  ]
+}
