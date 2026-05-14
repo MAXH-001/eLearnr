@@ -1,1 +1,190 @@
 
+name: Generate Index Files
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'QDB/**'
+      - 'Notes/**'
+      - 'more_apps/**'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Generate QDB/index.json
+        run: |
+          python3 - << 'EOF'
+          import os, json
+
+          MAX_QUESTIONS = 40
+          qdb_path = 'QDB'
+          result = { "subjects": [] }
+
+          if os.path.exists(qdb_path):
+            for subject in sorted(os.listdir(qdb_path)):
+              subject_path = os.path.join(qdb_path, subject)
+
+              # Skip non-directories, hidden files and index.json
+              if not os.path.isdir(subject_path) or subject.startswith('.') or subject == 'index.json':
+                continue
+
+              sets = []
+              for set_id in sorted(os.listdir(subject_path)):
+                set_path = os.path.join(subject_path, set_id)
+
+                # Must be a directory
+                if not os.path.isdir(set_path) or set_id.startswith('.'):
+                  continue
+
+                json_file = os.path.join(set_path, f"{set_id}.json")
+                if not os.path.isfile(json_file):
+                  print(f"  Warning: {json_file} not found, skipping set {set_id}")
+                  continue
+
+                try:
+                  with open(json_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                except Exception as e:
+                  print(f"  Error reading {json_file}: {e}, skipping")
+                  continue
+
+                meta = data.get('meta', {})
+                questions = data.get('questions', [])
+
+                # Enforce 40 question limit
+                if len(questions) > MAX_QUESTIONS:
+                  print(f"  Warning: {subject}/{set_id} has {len(questions)} questions. Capping at {MAX_QUESTIONS}.")
+                  questions = questions[:MAX_QUESTIONS]
+                  data['questions'] = questions
+                  # Write back capped file
+                  with open(json_file, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+
+                total = len(questions)
+
+                # Check for img folder
+                img_folder = os.path.join(set_path, 'img')
+                has_images = os.path.isdir(img_folder) and len(os.listdir(img_folder)) > 0
+
+                sets.append({
+                  "id": set_id,
+                  "topic": meta.get('topic', set_id),
+                  "total": total,
+                  "duration": meta.get('duration', 30),
+                  "has_images": has_images,
+                  "path": f"QDB/{subject}/{set_id}/{set_id}.json"
+                })
+
+              if sets:
+                result['subjects'].append({
+                  "name": subject,
+                  "sets": sets
+                })
+
+          output = os.path.join(qdb_path, 'index.json')
+          with open(output, 'w', encoding='utf-8') as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
+
+          total_sets = sum(len(s['sets']) for s in result['subjects'])
+          print(f"QDB index generated: {len(result['subjects'])} subjects, {total_sets} sets")
+          EOF
+
+      - name: Generate Notes/index.json
+        run: |
+          python3 - << 'EOF'
+          import os, json
+
+          notes_path = 'Notes'
+          result = { "subjects": [] }
+
+          if os.path.exists(notes_path):
+            for subject in sorted(os.listdir(notes_path)):
+              subject_path = os.path.join(notes_path, subject)
+
+              if not os.path.isdir(subject_path) or subject.startswith('.') or subject == 'index.json':
+                continue
+
+              files = []
+              for f in sorted(os.listdir(subject_path)):
+                if f.lower().endswith('.pdf') and not f.startswith('.'):
+                  files.append({
+                    "name": f,
+                    "path": f"Notes/{subject}/{f}"
+                  })
+
+              result['subjects'].append({
+                "name": subject,
+                "files": files
+              })
+
+            output = os.path.join(notes_path, 'index.json')
+            with open(output, 'w', encoding='utf-8') as f:
+              json.dump(result, f, indent=2, ensure_ascii=False)
+            print(f"Notes index generated: {len(result['subjects'])} subjects")
+          else:
+            print("Notes folder not found, skipping")
+          EOF
+
+      - name: Generate more_apps/index.json
+        run: |
+          python3 - << 'EOF'
+          import os, json
+
+          apps_path = 'more_apps'
+
+          # Read existing index to preserve url and desc fields you set manually
+          existing = {}
+          existing_file = os.path.join(apps_path, 'index.json')
+          if os.path.exists(existing_file):
+            try:
+              with open(existing_file, 'r', encoding='utf-8') as f:
+                old = json.load(f)
+              for app in old.get('apps', []):
+                existing[app['name']] = app
+            except:
+              pass
+
+          result = { "apps": [] }
+
+          if os.path.exists(apps_path):
+            for item in sorted(os.listdir(apps_path)):
+              item_path = os.path.join(apps_path, item)
+
+              if not os.path.isdir(item_path) or item.startswith('.'):
+                continue
+
+              logo_path = os.path.join(item_path, 'logo.png')
+              has_logo = os.path.exists(logo_path)
+
+              # Preserve existing url/desc if set
+              prev = existing.get(item, {})
+
+              result['apps'].append({
+                "name": item,
+                "desc": prev.get('desc', f"{item} by MAXH Technologies"),
+                "logo": f"more_apps/{item}/logo.png" if has_logo else "",
+                "url": prev.get('url', "")
+              })
+
+            output = os.path.join(apps_path, 'index.json')
+            with open(output, 'w', encoding='utf-8') as f:
+              json.dump(result, f, indent=2, ensure_ascii=False)
+            print(f"more_apps index generated: {len(result['apps'])} apps")
+          else:
+            print("more_apps folder not found, skipping")
+          EOF
+
+      - name: Commit and push index files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add QDB/index.json Notes/index.json more_apps/index.json 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "chore: auto-update index files [skip ci]"
+          git push
