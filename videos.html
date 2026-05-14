@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Videos — eDrillr</title>
+<title>Videos — eLearnr</title>
 <style>
   :root {
     --indigo:#4F46E5; --indigo-light:#EEF2FF;
@@ -174,26 +174,70 @@
   const themeIcon = document.getElementById('themeIcon');
   const sunSVG = `<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="5"/>`;
   const moonSVG = `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
-  function setTheme(dark) { html.setAttribute('data-theme', dark?'dark':'light'); themeIcon.innerHTML = dark?sunSVG:moonSVG; localStorage.setItem('eDrillr-theme', dark?'dark':'light'); }
-  const saved = localStorage.getItem('eDrillr-theme');
+  function setTheme(dark) { html.setAttribute('data-theme', dark?'dark':'light'); themeIcon.innerHTML = dark?sunSVG:moonSVG; localStorage.setItem('eLearnr-theme', dark?'dark':'light'); }
+  const saved = localStorage.getItem('eLearnr-theme');
   setTheme(saved ? saved==='dark' : false);
   document.getElementById('themeToggle').addEventListener('click', () => setTheme(html.getAttribute('data-theme')!=='dark'));
 
   history.replaceState(null, null, location.href);
   window.addEventListener('popstate', function() { location.replace('index.html'); });
 
+  const API = 'https://script.google.com/macros/s/AKfycbwawJeAi1bHPXQKwBHbXWQyP0E457aNeVghJiBqE3PnXX4ISqiPKoBD_YaBllMLyo3E/exec';
   let allVideos = [];
   let activeFilter = 'ALL';
 
   async function loadVideos() {
+    const list = document.getElementById('videoList');
+    list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">Loading videos...</div>';
+
+    let localVideos = [];
+    let sheetVideos = [];
+
+    // 1. Load local Videos/index.json
     try {
       const res = await fetch('Videos/index.json');
-      if (!res.ok) throw new Error();
+      if (res.ok) {
+        const data = await res.json();
+        localVideos = (data.videos || []).map(v => ({ ...v, source: 'local' }));
+      }
+    } catch(e) {}
+
+    // 2. Load from Google Sheet
+    try {
+      const res = await fetch(`${API}?action=get_videos`);
       const data = await res.json();
-      allVideos = data.videos || [];
-    } catch(e) {
-      allVideos = [];
+      if (data.success) {
+        sheetVideos = (data.videos || []).map(v => ({
+          title: v.title,
+          subject: v.subject || 'GENERAL',
+          youtube: v.youtube,
+          duration: v.duration || '00:00',
+          source: 'sheet'
+        }));
+      }
+    } catch(e) {}
+
+    // 3. Merge — deduplicate by youtube ID
+    const seen = new Set();
+    const merged = [];
+
+    // Sheet videos first (more up to date)
+    for (const v of sheetVideos) {
+      if (v.youtube && !seen.has(v.youtube)) {
+        seen.add(v.youtube);
+        merged.push(v);
+      }
     }
+
+    // Then local videos
+    for (const v of localVideos) {
+      if (v.youtube && !seen.has(v.youtube)) {
+        seen.add(v.youtube);
+        merged.push(v);
+      }
+    }
+
+    allVideos = merged;
     buildFilters();
     render();
   }
@@ -230,11 +274,10 @@
             <div class="play-btn">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             </div>
-            <span class="video-duration">${v.duration}</span>
           </div>
           <div class="video-info">
             <div class="video-title">${v.title}</div>
-            <div class="video-meta"><span>⏱ ${v.duration}</span></div>
+            ${v.duration && v.duration !== '00:00' ? `<div class="video-meta"><span>⏱ ${v.duration}</span></div>` : ''}
           </div>
         </div>`;
     }).join('');
@@ -253,9 +296,21 @@
     const v = allVideos[index];
     if (!v) return;
 
+    // Log video watch if logged in
+    const user = JSON.parse(localStorage.getItem('eLearnr-user') || 'null');
+    if (user) {
+      fetch(`${API}?action=log_video&userId=${user.id}&videoId=${v.youtube}&title=${encodeURIComponent(v.title)}`)
+        .catch(() => {});
+    }
+
     document.getElementById('playerTitle').textContent = v.title;
     document.getElementById('playerVideoTitle').textContent = v.title;
-    document.getElementById('playerDuration').textContent = `⏱ ${v.duration}`;
+    if (v.duration && v.duration !== '00:00') {
+      document.getElementById('playerDuration').textContent = `⏱ ${v.duration}`;
+      document.getElementById('playerDuration').style.display = 'block';
+    } else {
+      document.getElementById('playerDuration').style.display = 'none';
+    }
 
     const tag = document.getElementById('playerSubjectTag');
     tag.textContent = v.subject;
