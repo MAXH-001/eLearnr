@@ -1,0 +1,27 @@
+{
+  "name": "eLearnr",
+  "short_name": "eLearnr",
+  "description": "Your smartest study companion — Practice, Notes, Videos and more",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#4F46E5",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "en",
+  "scope": "/"
+}
