@@ -59,13 +59,6 @@
   .subj-meta { font-size:11px; color:var(--text3); }
   .subj-chevron { color:var(--text3); flex-shrink:0; }
 
-  .sets-panel { display:none; padding:8px 0 0 58px; flex-direction:column; gap:7px; }
-  .sets-panel.open { display:flex; }
-  .set-item { background:var(--surface2); border-radius:var(--radius-sm); padding:10px 14px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; border:1.5px solid transparent; transition:border-color 0.2s; }
-  .set-item:hover { border-color:var(--indigo); }
-  .set-item:active { transform:scale(0.98); }
-  .set-topic { font-weight:600; font-size:13px; color:var(--text); margin-bottom:2px; }
-  .set-detail { font-size:10px; color:var(--text3); }
 
   .empty { text-align:center; padding:48px 20px; color:var(--text3); }
   .empty svg { margin-bottom:10px; }
@@ -85,36 +78,80 @@
   [data-theme="dark"] .ce { background:#052e1c; color:#34D399; }
   [data-theme="dark"] .cr { background:#2d0a10; color:#FB7185; }
   [data-theme="dark"] .cp { background:#1e0a33; color:#C084FC; }
+  /* SCREENS */
+  .screen { display:none; flex-direction:column; flex:1; overflow:hidden; }
+  .screen.active { display:flex; }
+
+  /* DRUM PICKER */
+  .picker-hero { background:linear-gradient(135deg,var(--indigo),#3730A3); padding:20px; margin:12px 16px; border-radius:var(--radius); text-align:center; }
+  .picker-subject-label { font-size:11px; color:rgba(255,255,255,0.7); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+  .picker-title { font-size:20px; font-weight:800; color:#fff; margin-bottom:4px; }
+  .picker-meta { font-size:12px; color:rgba(255,255,255,0.75); min-height:18px; }
+  .drum-wrap { padding:8px 16px 12px; }
+  .drum-label { font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:10px; text-align:center; }
+  .drum-container { position:relative; height:200px; overflow:hidden; border-radius:var(--radius); background:var(--surface); border:1.5px solid var(--border); cursor:grab; user-select:none; }
+  .drum-container:active { cursor:grabbing; }
+  .drum-highlight { position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); height:44px; background:var(--indigo-light); border-top:2px solid var(--indigo); border-bottom:2px solid var(--indigo); pointer-events:none; z-index:2; }
+  .drum-fade-top { position:absolute; left:0; right:0; top:0; height:70px; background:linear-gradient(to bottom,var(--surface),transparent); z-index:3; pointer-events:none; }
+  .drum-fade-bottom { position:absolute; left:0; right:0; bottom:0; height:70px; background:linear-gradient(to top,var(--surface),transparent); z-index:3; pointer-events:none; }
+  .drum-list { position:absolute; width:100%; }
+  .drum-item { height:44px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; color:var(--text3); transition:color 0.1s,font-size 0.1s; }
+  .drum-item.selected { color:var(--indigo); font-size:20px; }
+  .confirm-btn { display:block; width:calc(100% - 32px); margin:0 16px 16px; padding:14px; background:var(--indigo); color:#fff; border:none; border-radius:var(--radius); font-size:15px; font-weight:700; cursor:pointer; transition:opacity 0.2s; }
+  .confirm-btn:active { opacity:0.85; }
+  .confirm-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
   [data-theme="dark"] .co { background:#2d1200; color:#FB923C; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <button class="back-btn" onclick="location.replace('index.html')">
+  <button class="back-btn" id="backBtn" onclick="goBack()">
     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
   </button>
-  <span class="topbar-title">Practice</span>
+  <span class="topbar-title" id="topbarTitle">Practice</span>
   <button class="icon-btn" id="themeToggle">
     <svg id="themeIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
   </button>
 </div>
 
-<div class="page-content">
-  <div class="search-wrap">
-    <div class="search-box">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Search subjects or topics..." autocomplete="off">
+<!-- SCREEN 1: SUBJECTS -->
+<div class="screen active" id="subjectsScreen">
+  <div class="page-content">
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search subjects..." autocomplete="off">
+      </div>
+    </div>
+    <div class="section-label" id="subjectLabel">Subjects</div>
+    <div class="subject-list" id="subjectList"></div>
+    <div class="empty" id="emptyState" style="display:none">
+      <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <p>No subjects yet.<br>Add question sets to your QDB folder.</p>
     </div>
   </div>
+</div>
 
-
-
-  <div class="section-label" id="subjectLabel">Subjects</div>
-  <div class="subject-list" id="subjectList"></div>
-  <div class="empty" id="emptyState" style="display:none">
-    <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-    <p>No subjects yet.<br>Add question sets to your QDB folder.</p>
+<!-- SCREEN 2: SET PICKER -->
+<div class="screen" id="pickerScreen">
+  <div class="page-content">
+    <div class="picker-hero">
+      <div class="picker-subject-label" id="pickerSubjectLabel">SUBJECT</div>
+      <div class="picker-title" id="pickerTitle">Select a Set</div>
+      <div class="picker-meta" id="pickerMeta"></div>
+    </div>
+    <div class="drum-wrap">
+      <div class="drum-label">Scroll to pick set number</div>
+      <div class="drum-container" id="drumContainer">
+        <div class="drum-highlight"></div>
+        <div class="drum-fade-top"></div>
+        <div class="drum-fade-bottom"></div>
+        <div class="drum-list" id="drumList"></div>
+      </div>
+    </div>
+    <button class="confirm-btn" id="confirmBtn" disabled onclick="goToQuiz()">Start Quiz →</button>
   </div>
 </div>
 
@@ -136,7 +173,11 @@
   function getIcon(name) { const u = name.toUpperCase(); for (const k in subjectIcons) { if (u.includes(k)) return subjectIcons[k]; } return subjectIcons.DEFAULT; }
 
   let allSubjects = [];
-
+  let currentSubject = null;
+  let selectedSetId = null;
+  let drumY = 0;
+  const ITEM_H = 44;
+  const TOTAL_SETS = 2000;
 
   async function loadSubjects() {
     try {
@@ -153,7 +194,7 @@
   function render() {
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
     let subjects = allSubjects;
-    if (q) subjects = subjects.filter(s => s.name.toLowerCase().includes(q) || s.sets.some(set => set.topic.toLowerCase().includes(q)));
+    if (q) subjects = subjects.filter(s => s.name.toLowerCase().includes(q));
 
     const list = document.getElementById('subjectList');
     const empty = document.getElementById('emptyState');
@@ -166,38 +207,163 @@
       const color = colorCycle[i % colorCycle.length];
       const icon = getIcon(s.name);
       return `
-        <div>
-          <div class="subject-card" onclick="toggleSets(this, '${s.name}')">
-            <div class="subj-icon ${color}">${icon}</div>
-            <div class="subj-info">
-              <div class="subj-name">${s.name}</div>
-              <div class="subj-meta">${s.sets.length} set${s.sets.length!==1?'s':''} · Tap to expand</div>
-            </div>
-            <svg class="subj-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="subject-card" style="animation-delay:${i*0.04}s" onclick="openPicker('${s.name}')">
+          <div class="subj-icon ${color}">${icon}</div>
+          <div class="subj-info">
+            <div class="subj-name">${s.name}</div>
+            <div class="subj-meta">${s.sets ? s.sets.length : 0} set${s.sets && s.sets.length!==1?'s':''} available</div>
           </div>
-          <div class="sets-panel" id="sets-${s.name.replace(/\s+/g,'_')}">
-            ${s.sets.map(set => `
-              <div class="set-item" onclick="startQuiz('${s.name}', '${set.id}')">
-                <div>
-                  <div class="set-topic">${set.topic}</div>
-                  <div class="set-detail">${set.total} questions · ${set.duration} min</div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
+          <svg class="subj-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>`;
     }).join('');
   }
 
-  function toggleSets(card, name) {
-    const panel = document.getElementById('sets-' + name.replace(/\s+/g,'_'));
-    const chevron = card.querySelector('.subj-chevron');
-    panel.classList.toggle('open');
-    chevron.style.transform = panel.classList.contains('open') ? 'rotate(180deg)' : '';
+  // ── DRUM PICKER ───────────────────────────────────────
+  function openPicker(subjectName) {
+    currentSubject = allSubjects.find(s => s.name === subjectName);
+    if (!currentSubject) return;
+
+    document.getElementById('pickerSubjectLabel').textContent = subjectName;
+    document.getElementById('pickerTitle').textContent = 'Select Set';
+    document.getElementById('pickerMeta').textContent = '';
+    document.getElementById('confirmBtn').disabled = true;
+    selectedSetId = null;
+
+    buildDrum();
+    showScreen('pickerScreen');
+    document.getElementById('topbarTitle').textContent = subjectName;
   }
 
+  function buildDrum() {
+    const drum = document.getElementById('drumList');
+    // Generate set IDs 0001 to 2000
+    let html = '';
+    for (let i = 1; i <= TOTAL_SETS; i++) {
+      const id = String(i).padStart(4, '0');
+      html += `<div class="drum-item" data-id="${id}">${id}</div>`;
+    }
+    drum.innerHTML = html;
 
+    // Center first item
+    drumY = 0;
+    setDrumY(0, false);
+    updateSelected(0);
+    initDrumEvents();
+  }
+
+  function setDrumY(y, animate) {
+    const drum = document.getElementById('drumList');
+    drum.style.transition = animate ? 'transform 0.2s ease' : 'none';
+    // Offset so first item is centered in 200px container: center = 100px, item center = 22px, padding = 78px
+    drum.style.transform = `translateY(${78 - y}px)`;
+  }
+
+  function updateSelected(index) {
+    const items = document.querySelectorAll('.drum-item');
+    items.forEach((item, i) => {
+      item.classList.toggle('selected', i === index);
+    });
+    if (items[index]) {
+      selectedSetId = items[index].getAttribute('data-id');
+      checkSetExists(selectedSetId);
+    }
+  }
+
+  async function checkSetExists(setId) {
+    const confirmBtn = document.getElementById('confirmBtn');
+    const meta = document.getElementById('pickerMeta');
+
+    // Check if this set exists in the subject's sets array
+    const set = currentSubject.sets ? currentSubject.sets.find(s => s.id === setId) : null;
+
+    if (set) {
+      meta.textContent = `${set.topic} · ${set.total} questions · ${set.duration} min`;
+      meta.style.color = 'rgba(255,255,255,0.85)';
+      confirmBtn.disabled = false;
+    } else {
+      meta.textContent = 'Set not available yet';
+      meta.style.color = 'rgba(255,255,255,0.5)';
+      confirmBtn.disabled = true;
+    }
+  }
+
+  function initDrumEvents() {
+    const container = document.getElementById('drumContainer');
+    let startY = 0;
+    let startDrumY = 0;
+    let isDragging = false;
+    let currentIndex = 0;
+
+    function getIndex() {
+      return Math.max(0, Math.min(TOTAL_SETS - 1, Math.round(drumY / ITEM_H)));
+    }
+
+    container.addEventListener('touchstart', e => {
+      startY = e.touches[0].clientY;
+      startDrumY = drumY;
+      isDragging = true;
+    }, { passive: true });
+
+    container.addEventListener('touchmove', e => {
+      if (!isDragging) return;
+      const dy = startY - e.touches[0].clientY;
+      drumY = Math.max(0, Math.min((TOTAL_SETS - 1) * ITEM_H, startDrumY + dy));
+      setDrumY(drumY, false);
+      const idx = getIndex();
+      if (idx !== currentIndex) { currentIndex = idx; updateSelected(idx); }
+    }, { passive: true });
+
+    container.addEventListener('touchend', () => {
+      isDragging = false;
+      const idx = getIndex();
+      drumY = idx * ITEM_H;
+      setDrumY(drumY, true);
+      updateSelected(idx);
+    });
+
+    // Mouse support
+    container.addEventListener('mousedown', e => {
+      startY = e.clientY; startDrumY = drumY; isDragging = true; e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const dy = startY - e.clientY;
+      drumY = Math.max(0, Math.min((TOTAL_SETS - 1) * ITEM_H, startDrumY + dy));
+      setDrumY(drumY, false);
+      const idx = getIndex();
+      if (idx !== currentIndex) { currentIndex = idx; updateSelected(idx); }
+    });
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      const idx = getIndex();
+      drumY = idx * ITEM_H;
+      setDrumY(drumY, true);
+      updateSelected(idx);
+    });
+  }
+
+  function goToQuiz() {
+    if (!currentSubject || !selectedSetId) return;
+    location.replace(`quiz.html?subject=${encodeURIComponent(currentSubject.name)}&set=${selectedSetId}`);
+  }
+
+  function goBack() {
+    if (document.getElementById('pickerScreen').classList.contains('active')) {
+      showScreen('subjectsScreen');
+      document.getElementById('topbarTitle').textContent = 'Practice';
+    } else {
+      location.replace('index.html');
+    }
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  document.getElementById('searchInput').addEventListener('input', render);
+  loadSubjects();
 
   document.getElementById('searchInput').addEventListener('input', render);
 
