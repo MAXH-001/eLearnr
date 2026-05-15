@@ -236,33 +236,41 @@
 
   function buildDrum() {
     const drum = document.getElementById('drumList');
-    // Generate set IDs 0001 to 2000
     let html = '';
     for (let i = 1; i <= TOTAL_SETS; i++) {
       const id = String(i).padStart(4, '0');
       html += `<div class="drum-item" data-id="${id}">${id}</div>`;
     }
     drum.innerHTML = html;
-
-    // Center first item
     drumY = 0;
-    setDrumY(0, false);
+    applyDrumY(0, false);
     updateSelected(0);
     initDrumEvents();
   }
 
-  function setDrumY(y, animate) {
+  function applyDrumY(y, animate) {
     const drum = document.getElementById('drumList');
     drum.style.transition = animate ? 'transform 0.2s ease' : 'none';
-    // Offset so first item is centered in 200px container: center = 100px, item center = 22px, padding = 78px
+    // Container is 200px, center = 100px, item height = 44px, item center = 22px
+    // So first item center should be at 100px: offset = 100 - 22 = 78px
     drum.style.transform = `translateY(${78 - y}px)`;
   }
 
   function updateSelected(index) {
-    const items = document.querySelectorAll('.drum-item');
-    items.forEach((item, i) => {
-      item.classList.toggle('selected', i === index);
+    document.querySelectorAll('.drum-item').forEach((item, i) => {
+      if (i === index) {
+        item.classList.add('selected');
+        item.style.color = 'var(--indigo)';
+        item.style.fontSize = '20px';
+        item.style.fontWeight = '800';
+      } else {
+        item.classList.remove('selected');
+        item.style.color = '';
+        item.style.fontSize = '';
+        item.style.fontWeight = '';
+      }
     });
+    const items = document.querySelectorAll('.drum-item');
     if (items[index]) {
       selectedSetId = items[index].getAttribute('data-id');
       checkSetExists(selectedSetId);
@@ -308,7 +316,7 @@
       if (!isDragging) return;
       const dy = startY - e.touches[0].clientY;
       drumY = Math.max(0, Math.min((TOTAL_SETS - 1) * ITEM_H, startDrumY + dy));
-      setDrumY(drumY, false);
+      applyDrumY(drumY, false);
       const idx = getIndex();
       if (idx !== currentIndex) { currentIndex = idx; updateSelected(idx); }
     }, { passive: true });
@@ -317,7 +325,7 @@
       isDragging = false;
       const idx = getIndex();
       drumY = idx * ITEM_H;
-      setDrumY(drumY, true);
+      applyDrumY(drumY, true);
       updateSelected(idx);
     });
 
@@ -329,7 +337,7 @@
       if (!isDragging) return;
       const dy = startY - e.clientY;
       drumY = Math.max(0, Math.min((TOTAL_SETS - 1) * ITEM_H, startDrumY + dy));
-      setDrumY(drumY, false);
+      applyDrumY(drumY, false);
       const idx = getIndex();
       if (idx !== currentIndex) { currentIndex = idx; updateSelected(idx); }
     });
@@ -338,7 +346,7 @@
       isDragging = false;
       const idx = getIndex();
       drumY = idx * ITEM_H;
-      setDrumY(drumY, true);
+      applyDrumY(drumY, true);
       updateSelected(idx);
     });
   }
